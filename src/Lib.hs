@@ -59,11 +59,11 @@ checkline str =  start : checkline finish where
 testfunc :: [Char] -> (String, String)
 testfunc str = 
     case runParser(some (optional (some (charinSeq " ")) *> some (charinSeq "><=1234567890") <* optional (charinSeq " ")) <* optional (charinSeq "\n")) str of
-        Nothing -> (fst(fromJust (x str)), "") -- runParser (satysfy (/='\n')) )
+        Nothing -> (fst(fromJust (funcx str)), "") -- runParser (satysfy (/='\n')) )
         Just (d,s) -> (d, concat s)
     
-x :: [Char] -> Maybe ([Char], [Char])
-x = runParser  (some(satisfy (/='\n')) <* optional (charinSeq "\n"))
+funcx :: [Char] -> Maybe ([Char], [Char])
+funcx = runParser  (some(satisfy (/='\n')) <* optional (charinSeq "\n"))
 
 printandcalc :: [String] -> IO ()
 printandcalc [] = putStrLn "Конец!!" -- Обработка пустого списка
@@ -83,10 +83,3 @@ messymain :: String -> IO()
 messymain line = 
     let equotes = checkline  line
     in printandcalc equotes
-    {-
-    if null equotes then putStrLn "Файл пуст"
-    else do 
-        let res = getCalc (checkline line)
-        --putStrLn "here 123"
-        printResults equotes res-}
-
