@@ -1,7 +1,7 @@
 module Lib
     ( messymain
     ) where
-import Control.Applicative (Alternative(..))
+import Control.Applicative --(Alternative(..))
 import Data.Char (digitToInt,isDigit)
 import Data.Maybe
 newtype Parser tok a = Parser { runParser :: [tok] -> Maybe ([tok],a) }
@@ -52,31 +52,41 @@ convInt list = last list + convInt (init list) * 10
 --checkline :: String -> [String]
 checkline :: [Char] -> [String]
 checkline "" = []
-checkline str =  start :  checkline finish where
-    start = snd (fromJust (runParser (some(charinSeq "><=1234567890")<* some(charinSeq "\n")) str))
-    finish = fst (fromJust (runParser (some(charinSeq "><=1234567890")<* some(charinSeq "\n")) str))
+checkline str =  start : checkline finish where
+    start = if snd (testfunc  str) == "" then "error" else snd (testfunc  str)
+    finish = fst (testfunc  str)
 
---getCalc list = snd (fromJust(runParser comparison (head list)))
+testfunc :: [Char] -> (String, String)
+testfunc str = 
+    case runParser(some (optional (some (charinSeq " ")) *> some (charinSeq "><=1234567890") <* optional (charinSeq " ")) <* optional (charinSeq "\n")) str of
+        Nothing -> (fst(fromJust (x str)), "") -- runParser (satysfy (/='\n')) )
+        Just (d,s) -> (d, concat s)
+    
+x :: [Char] -> Maybe ([Char], [Char])
+x = runParser  (some(satisfy (/='\n')) <* optional (charinSeq "\n"))
 
-getCalc :: [[Char]] -> [Bool]
-getCalc [] = []
-getCalc list =  do 
-    start : getCalc (tail list) where
-    start = snd (fromJust(runParser comparison (head list)))
-
-printResults:: [String]-> [Bool] -> IO()
-printResults [l1] [l2] = do 
-    putStrLn $ "Неравенство : "++  l1 ++" Результат: "++ show l2
-printResults list listres  = do
-    putStrLn $ "Неравенство : "++ head list ++" Результат: "++ show (head listres) 
-    printResults  (tail list) (tail listres)
-
+printandcalc :: [String] -> IO ()
+printandcalc [] = putStrLn "Конец!!" -- Обработка пустого списка
+printandcalc (x:xs) = 
+    case runParser comparison x of
+        Nothing ->  
+             putStrLn "Ошибка чтения" >>
+             printandcalc xs
+        Just ("", s) -> 
+            putStrLn ("Неравенство: " ++ x ++ " Результат: " ++ show s) >>
+            printandcalc xs
+        Just (_, _) ->
+             putStrLn "Ошибка чтения" >>
+             printandcalc xs
+             
 messymain :: String -> IO()   
-messymain line = do
+messymain line = 
     let equotes = checkline  line
+    in printandcalc equotes
+    {-
     if null equotes then putStrLn "Файл пуст"
     else do 
-        let res = getCalc (checkline  line)
+        let res = getCalc (checkline line)
         --putStrLn "here 123"
-        printResults equotes res
+        printResults equotes res-}
 
